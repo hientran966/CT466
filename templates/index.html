@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Khôi Phục Ảnh</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(to right, #ece9e6, #ffffff);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-image: url('/static/images/background.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+
+        h1 {
+            color: #000000;
+            font-size: 36px;
+            text-decoration: solid;
+            text-shadow: 2px;
+        }
+
+        form {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        input[type="file"] {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            background: #f8f9fa;
+            width: 100%;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            padding: 12px 20px;
+            font-size: 16px;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        .container {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .preview-box {
+            width: 100%;
+            max-width: 500px;
+            min-height: 300px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            justify-items: center;
+        }
+
+        .preview-box canvas {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            margin-top: 10px;
+            border: 1px solid #ddd;
+        }
+
+        .popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+            text-align: center;
+            max-width: 400px;
+        }
+
+        .popup img {
+            max-width: 100%;
+            border-radius: 10px;
+        }
+
+        .popup button {
+            margin-top: 10px;
+            background-color: #dc3545;
+        }
+
+        .popup button:hover {
+            background-color: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <h1>Tải Ảnh Lên</h1>
+    <form action="/" method="post" enctype="multipart/form-data" onsubmit="prepareMask()">
+        <input type="file" name="image" accept="image/*" required onchange="loadImage(event)">
+        <button type="submit">Xác Nhận</button>
+        <input type="hidden" name="mask" id="maskData">
+    </form>
+
+    <div class="container">
+        <div class="preview-box">
+            <h3 id="imageStatus">Không có ảnh</h3>
+            <canvas id="canvas" style="display: none;"></canvas>
+        </div>
+    </div>
+
+    {% if result_url %}
+        <div id="popup" class="popup">
+            <h2>Kết Quả:</h2>
+            <img src="{{ result_url }}" alt="Colorized Image">
+            <button onclick="closePopup()">Đóng</button>
+        </div>
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                document.getElementById("popup").style.display = "block";
+            });
+        </script>
+    {% endif %}
+
+    <script>
+        let canvas = document.getElementById("canvas");
+        let ctx = canvas.getContext("2d");
+        let painting = false;
+
+        function loadImage(event) {
+            let file = event.target.files[0];
+            let reader = new FileReader();
+            reader.onload = function() {
+                let img = new Image();
+                img.onload = function() {
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    ctx.fillStyle = "red";
+                    canvas.style.display = "block";
+                    document.getElementById("imageStatus").textContent = "Chọn vùng cần khôi phục:";
+                }
+                img.src = reader.result;
+            }
+            if (file) {
+                reader.readAsDataURL(file);
+            }
+        }
+
+        canvas.addEventListener("mousedown", () => painting = true);
+        canvas.addEventListener("mouseup", () => painting = false);
+        canvas.addEventListener("mousemove", draw);
+
+        function draw(event) {
+            if (!painting) return;
+            let rect = canvas.getBoundingClientRect();
+            let x = event.clientX - rect.left;
+            let y = event.clientY - rect.top;
+            ctx.fillRect(x, y, 5, 5);
+        }
+
+        function prepareMask() {
+            let maskData = canvas.toDataURL("image/png");
+            document.getElementById("maskData").value = maskData;
+        }
+
+        function closePopup() {
+            document.getElementById("popup").style.display = "none";
+        }
+    </script>
+</body>
+</html>
