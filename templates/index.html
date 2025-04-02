@@ -20,6 +20,7 @@
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
+            backdrop-filter: blur(2px);
         }
 
         h1 {
@@ -143,6 +144,9 @@
         <div id="popup" class="popup">
             <h2>Kết Quả:</h2>
             <img src="{{ result_url }}" alt="Colorized Image">
+            <a href="{{ result_url }}" download>
+                <button>Tải Xuống</button>
+            </a>
             <button onclick="closePopup()">Đóng</button>
         </div>
         <script>
